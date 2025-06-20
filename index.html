@@ -3,12 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#ffffff">
-  <meta name="theme-color-dark" content="#000000">
-  <title>Noni - لعبة الذاكرة</title>
+  <meta name="theme-color" content="#FF9800">
+  <title>لعبة الذاكرة - متعددة المستويات</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="manifest" href="manifest.json">
   <style>
     :root {
       --card-size: min(12vw, 80px);
@@ -484,20 +482,13 @@
     // إنشاء ملف manifest.json تلقائيًا لتلبية متطلبات PWABuilder
     const manifest = {
       "id": "/",
-      "name": "Noni",
-      "short_name": "Hat. M",
+      "name": "لعبة الذاكرة",
+      "short_name": "الذاكرة",
       "start_url": "./",
       "display": "standalone",
-      "background_color": "#ffffff",
-      "theme_color": "#ffffff",
-      "theme_dark_color": "#000000",
-      "nav_color": "#ffffff",
-      "nav_dark_color": "#000000",
-      "nav_divider_color": "#ffffff",
-      "nav_divider_dark_color": "#000000",
+      "background_color": "#333",
+      "theme_color": "#FF9800",
       "description": "لعبة ذاكرة متعددة المستويات مع مؤثرات صوتية وتصميم جذاب",
-      "version": "1.0.0.0",
-      "version_code": 1,
       "launch_handler": {
         "client_mode": "focus-existing"
       },
