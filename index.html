@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#FF9800">
   <title>لعبة الذاكرة - متعددة المستويات</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     :root {
       --card-size: min(12vw, 80px);
@@ -24,6 +26,7 @@
       text-align: center;
       color: #fff;
       min-height: 100vh;
+      touch-action: manipulation;
     }
     
     .container {
@@ -394,7 +397,6 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
   <div class="container">
@@ -477,6 +479,40 @@
   <audio id="bgMusic" loop src="https://assets.mixkit.co/music/preview/mixkit-game-show-suspense-waiting-668.mp3" preload="auto"></audio>
 
   <script>
+    // إنشاء ملف manifest.json تلقائيًا لتلبية متطلبات PWABuilder
+    const manifest = {
+      "name": "لعبة الذاكرة",
+      "short_name": "الذاكرة",
+      "start_url": "./",
+      "display": "standalone",
+      "background_color": "#333",
+      "theme_color": "#FF9800",
+      "description": "لعبة ذاكرة متعددة المستويات مع مؤثرات صوتية وتصميم جذاب",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        },
+        {
+          "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>",
+          "sizes": "512x512",
+          "type": "image/svg+xml"
+        }
+      ]
+    };
+
+    // إنشاء رابط لملف manifest
+    const manifestBlob = new Blob([JSON.stringify(manifest, null, 2)], {type: 'application/json'});
+    const manifestURL = URL.createObjectURL(manifestBlob);
+    
+    // إضافة رابط manifest إلى الصفحة
+    const link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = manifestURL;
+    document.head.appendChild(link);
+
+    // كود اللعبة
     const board = document.getElementById("gameBoard");
     const triesElement = document.getElementById("tries");
     const timerElement = document.getElementById("timer");
@@ -488,7 +524,6 @@
     const finalTimeElement = document.getElementById("finalTime");
     const soundIcon = document.getElementById("soundIcon");
     
-    // عناصر الصوت
     const flipSound = document.getElementById("flipSound");
     const matchSound = document.getElementById("matchSound");
     const winSound = document.getElementById("winSound");
@@ -502,6 +537,7 @@
     let interval;
     let totalPairs = 0;
     let soundEnabled = true;
+    let audioInitialized = false;
 
     const themes = {
       easy: { 
@@ -527,21 +563,40 @@
       }
     };
 
-    // تشغيل الموسيقى الخلفية عند تحميل الصفحة
-    window.addEventListener('DOMContentLoaded', () => {
-      if (soundEnabled) {
+    // تهيئة الصوت للهواتف
+    function initAudio() {
+      if (audioInitialized) return;
+      
+      // إعداد خاصية playsinline لهواتف iOS
+      [flipSound, matchSound, winSound, bgMusic].forEach(audio => {
+        audio.setAttribute('playsinline', '');
+        audio.setAttribute('webkit-playsinline', '');
+      });
+      
+      // حل مشكلة التشغيل التلقائي على الهواتف
+      const activateAudio = () => {
         bgMusic.volume = 0.3;
-        bgMusic.play().catch(e => console.log("Auto-play prevented"));
-      }
-      startGame();
-    });
+        bgMusic.play().then(() => {
+          bgMusic.pause();
+          bgMusic.currentTime = 0;
+        }).catch(e => console.log("Audio activation error:", e));
+        
+        document.removeEventListener('click', activateAudio);
+        document.removeEventListener('touchstart', activateAudio);
+      };
+      
+      document.addEventListener('click', activateAudio, { once: true });
+      document.addEventListener('touchstart', activateAudio, { once: true });
+      
+      audioInitialized = true;
+    }
 
     function toggleSound() {
       soundEnabled = !soundEnabled;
       if (soundEnabled) {
         soundIcon.className = "fas fa-volume-up";
         bgMusic.volume = 0.3;
-        bgMusic.play();
+        bgMusic.play().catch(e => console.log("Music play error:", e));
       } else {
         soundIcon.className = "fas fa-volume-mute";
         bgMusic.pause();
@@ -551,7 +606,7 @@
     function playSound(sound) {
       if (!soundEnabled) return;
       sound.currentTime = 0;
-      sound.play().catch(e => console.log("Sound play prevented"));
+      sound.play().catch(e => console.log("Sound play error:", e));
     }
 
     function shuffle(array) {
@@ -564,6 +619,8 @@
     }
 
     function startGame() {
+      initAudio();
+      
       clearInterval(interval);
       timer = 0;
       timerElement.innerText = 0;
@@ -593,7 +650,6 @@
         board.appendChild(card);
       });
 
-      // عرض جميع البطاقات مؤقتاً في البداية
       setTimeout(() => {
         board.querySelectorAll('.card').forEach(card => {
           card.innerHTML = '';
@@ -690,6 +746,12 @@
       playSound(flipSound);
       instructionsModal.style.display = "none";
     }
+
+    // بدء اللعبة عند تحميل الصفحة
+    window.addEventListener('DOMContentLoaded', () => {
+      initAudio();
+      startGame();
+    });
   </script>
 </body>
-</html>
+      </html>
